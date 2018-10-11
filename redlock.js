@@ -290,14 +290,22 @@ Redlock.prototype._lock = function _lock(resource, value, ttl, callback) {
 		if(value === null) {
 			value = self._random();
 			request = function(server, loop){
-				return server.eval(self.lockScript, 1, resource, value, ttl, loop);
+				let result = server.eval(self.lockScript, 1, resource, value, ttl, loop);
+				if (result === false) {
+					loop(new Error("Failed to contact client to obtain lock."), null);
+				}
+				return result;
 			};
 		}
 
 		// extend an existing lock
 		else {
 			request = function(server, loop){
-				return server.eval(self.extendScript, 1, resource, value, ttl, loop);
+				let result = server.eval(self.extendScript, 1, resource, value, ttl, loop);
+				if (result === false) {
+					loop(new Error("Failed to contact client to extend lock"), null);
+				}
+				return result;
 			};
 		}
 
